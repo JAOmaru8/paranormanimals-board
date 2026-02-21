@@ -2,9 +2,9 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<meta name="robots" content="noindex, nofollow">
-    <title>Paranormanimals - Mesa de Corte y Puntuación</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Paranormanimals - Mesa Interactiva</title>
     <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -18,55 +18,42 @@
             --shadow-level-1: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
             --shadow-level-2: 0 20px 25px -5px rgba(0, 0, 0, 0.6);
 
-            --color-h: #4CAF50; 
-            --color-a: #2196F3; 
-            --color-v: #f44336; 
-            --color-z: #9C27B0; 
-            --color-l: #795548; 
-            --color-i: #FFC107; 
+            --color-h: #4CAF50; --color-a: #2196F3; --color-v: #f44336; 
+            --color-z: #9C27B0; --color-l: #795548; --color-i: #FFC107; 
         }
 
         body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            overflow: hidden;
-            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            overflow: hidden; font-family: 'Segoe UI', Roboto, sans-serif;
             background-color: var(--bg-color);
             background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
-            background-size: 20px 20px;
-            color: white;
-            user-select: none;
+            background-size: 20px 20px; color: white; user-select: none;
+            /* Previene gestos táctiles nativos del navegador como refrescar al tirar hacia abajo */
+            touch-action: none; 
         }
 
-        /* UI CONTROLS */
+        /* UI CONTROLS - Adaptados a móvil */
         #ui-layer {
-            position: fixed;
-            bottom: 20px; left: 50%;
-            transform: translateX(-50%);
-            display: flex; gap: 10px; align-items: center;
-            z-index: 2000;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 12px 24px;
-            border-radius: 50px;
-            backdrop-filter: blur(8px);
-            border: 1px solid #444;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 8px; align-items: center; z-index: 2000;
+            background: rgba(0, 0, 0, 0.85); padding: 10px 15px;
+            border-radius: 50px; backdrop-filter: blur(8px);
+            border: 1px solid #444; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+            flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px;
         }
 
         button {
-            background: #333; border: 1px solid #555;
-            color: #ddd; padding: 8px 16px;
-            border-radius: 20px; cursor: pointer;
-            font-size: 0.9rem; transition: all 0.2s ease;
+            background: #333; border: 1px solid #555; color: #ddd;
+            padding: 8px 12px; border-radius: 20px; cursor: pointer;
+            font-size: 0.85rem; transition: all 0.2s ease; white-space: nowrap;
         }
         button:hover { background: #555; color: white; transform: translateY(-2px); }
         button.primary { background: var(--color-h); color: #000; border: none; font-weight: bold; }
         button.active-toggle { background: #ffc107; color: #000; border-color: #ff9800; }
 
         #stats {
-            position: fixed; top: 20px; left: 20px;
-            background: rgba(0,0,0,0.7); padding: 8px 16px;
-            border-radius: 8px; font-size: 0.85rem; color: #ccc;
+            position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
+            padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; color: #ccc;
             pointer-events: none; z-index: 2000; border: 1px solid #444;
         }
 
@@ -78,18 +65,31 @@
             opacity: 0; transition: opacity 0.3s; z-index: 3000; pointer-events: none;
         }
 
+        /* SCORE BAR (MOBILE FRIENDLY) */
+        #score-bar {
+            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+            display: flex; gap: 5px; background: rgba(30, 30, 30, 0.95);
+            padding: 10px; border-radius: 15px; border: 2px solid #4dabf7;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 2500;
+            opacity: 0; pointer-events: none; transition: all 0.3s ease;
+        }
+        #score-bar.visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+        
+        .score-btn {
+            width: 35px; height: 35px; border-radius: 50%; border: none;
+            font-family: 'Luckiest Guy', cursive; font-size: 16px; color: white;
+            cursor: pointer; display: flex; justify-content: center; align-items: center;
+        }
+        .score-btn:active { transform: scale(0.9); }
+        .btn-clear { background: #555; font-size: 12px; width: auto; padding: 0 10px; border-radius: 10px; font-family: sans-serif; }
+
         /* VIEWPORT & SELECTION BOX */
         #viewport { width: 100%; height: 100%; position: relative; perspective: 2000px; }
-        
         #selection-box {
             position: absolute; border: 1px solid rgba(80, 150, 255, 0.8);
             background: rgba(80, 150, 255, 0.2); pointer-events: none; z-index: 3000; display: none;
         }
-
-        #board-content {
-            position: absolute; top: 0; left: 0;
-            transform-origin: 0 0; transform-style: preserve-3d;
-        }
+        #board-content { position: absolute; top: 0; left: 0; transform-origin: 0 0; transform-style: preserve-3d; }
 
         /* CARD CONTAINER */
         .card-container {
@@ -97,35 +97,28 @@
             perspective: 1000px; cursor: grab; transition: filter 0.2s ease;
         }
         
-        .card-container:hover .card-inner {
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), var(--shadow-level-1);
+        /* Desktop hover */
+        @media (hover: hover) {
+            .card-container:hover .card-inner { box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), var(--shadow-level-1); }
         }
 
+        /* Active card target (replaces hover for touch) */
+        .card-container.active-target .card-inner { box-shadow: 0 0 0 4px #4dabf7, var(--shadow-level-1); }
         .card-container.selected .card-inner { box-shadow: 0 0 0 3px #4dabf7, var(--shadow-level-1); }
         .card-container:hover { z-index: 100; }
         .card-container.dragging { z-index: 999 !important; cursor: grabbing; }
 
-        /* PUNTUACIONES (SCORE BADGE) */
+        /* PUNTUACIONES */
         .score-badge {
-            position: absolute;
-            top: 10px; /* Ajustado para quedar dentro con padding */
-            right: 10px; /* Ajustado para quedar dentro con padding */
-            width: 44px; height: 44px;
-            border-radius: 50%;
-            display: flex; justify-content: center; align-items: center;
-            font-family: 'Luckiest Guy', cursive;
-            font-size: 22px; color: white;
-            z-index: 20;
+            position: absolute; top: 10px; right: 10px; width: 44px; height: 44px;
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            font-family: 'Luckiest Guy', cursive; font-size: 22px; color: white; z-index: 20;
             box-shadow: 0 4px 8px rgba(0,0,0,0.6), inset 0 2px 4px rgba(255,255,255,0.3);
-            border: 3px solid #fff;
-            opacity: 0; transform: scale(0.5) rotate(-10deg);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            pointer-events: none; 
+            border: 3px solid #fff; opacity: 0; transform: scale(0.5) rotate(-10deg);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; 
         }
 
-        body.show-scores .score-badge.has-score {
-            opacity: 1; transform: scale(1) rotate(5deg);
-        }
+        body.show-scores .score-badge.has-score { opacity: 1; transform: scale(1) rotate(5deg); }
 
         .score-color-1, .score-color-2, .score-color-3, .score-color-4 { background-color: #111; }
         .score-color-5 { background-color: #b71c1c; }
@@ -135,44 +128,29 @@
         .score-color-9 { background-color: #8bc34a; }
         .score-color-10 { background-color: #4caf50; }
 
-        /* CARD INNER */
+        /* CARD INNER & FACES */
         .card-inner {
             position: relative; width: 100%; height: 100%; text-align: center;
             transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
-            transform-style: preserve-3d; border-radius: var(--card-radius);
-            box-shadow: var(--shadow-level-1);
+            transform-style: preserve-3d; border-radius: var(--card-radius); box-shadow: var(--shadow-level-1);
         }
-
         .card-container.flipped .card-inner { transform: rotateY(180deg); }
         .card-container.dragging .card-inner { box-shadow: var(--shadow-level-2); transform: scale(1.05) rotateZ(2deg); }
         .card-container.dragging.flipped .card-inner { transform: scale(1.05) rotateZ(2deg) rotateY(180deg); }
 
-        /* CARAS */
         .card-face {
             position: absolute; width: 100%; height: 100%;
             -webkit-backface-visibility: hidden; backface-visibility: hidden;
             border-radius: var(--card-radius); overflow: hidden; 
             background: var(--missing-bg); display: flex; justify-content: center; align-items: center;
         }
-
-        .card-face.back {
-            transform: rotateY(180deg); background: #222;
-            border: 2px solid #444; box-sizing: border-box;
-        }
-
-        .bleed-image {
-            width: 109.68%; height: 109.68%; object-fit: cover;
-            object-position: center center; display: block; pointer-events: none;
-        }
+        .card-face.back { transform: rotateY(180deg); background: #222; border: 2px solid #444; box-sizing: border-box; }
+        .bleed-image { width: 109.68%; height: 109.68%; object-fit: cover; object-position: center center; display: block; pointer-events: none; }
 
         /* PLACEHOLDER */
-        .card-placeholder {
-            display: none; flex-direction: column; align-items: center; justify-content: center;
-            width: 100%; height: 100%; padding: 10px; box-sizing: border-box;
-        }
+        .card-placeholder { display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; padding: 10px; box-sizing: border-box; }
         .card-container.missing .card-face.front .bleed-image { display: none; }
         .card-container.missing .card-face.front .card-placeholder { display: flex; }
-
         .ph-icon { font-size: 2rem; margin-bottom: 5px; opacity: 0.8; }
         .ph-val { font-size: 2.5rem; font-weight: 900; line-height: 1; }
         .ph-fam { font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; margin-top: 5px; opacity: 0.7;}
@@ -189,83 +167,71 @@
 <body>
 
     <div id="toast">Acción completada</div>
-    <div id="stats">Cargando mesa de trabajo...</div>
+    <div id="stats">Cargando mesa...</div>
+
+    <div id="score-bar">
+        <button class="score-btn score-color-1" onclick="scoreActiveCard(1)">1</button>
+        <button class="score-btn score-color-2" onclick="scoreActiveCard(2)">2</button>
+        <button class="score-btn score-color-3" onclick="scoreActiveCard(3)">3</button>
+        <button class="score-btn score-color-4" onclick="scoreActiveCard(4)">4</button>
+        <button class="score-btn score-color-5" onclick="scoreActiveCard(5)">5</button>
+        <button class="score-btn score-color-6" onclick="scoreActiveCard(6)">6</button>
+        <button class="score-btn score-color-7" onclick="scoreActiveCard(7)">7</button>
+        <button class="score-btn score-color-8" onclick="scoreActiveCard(8)">8</button>
+        <button class="score-btn score-color-9" onclick="scoreActiveCard(9)">9</button>
+        <button class="score-btn score-color-10" onclick="scoreActiveCard(10)">10</button>
+        <button class="score-btn btn-clear" onclick="scoreActiveCard(null)">Borrar</button>
+    </div>
 
     <div id="ui-layer">
         <button onclick="organize('family')">Familias</button>
         <button onclick="organize('value')">Valor</button>
-        <button onclick="organize('score')">🌟 Por Puntuación</button>
-        <div style="width:1px; height: 20px; background:#555; margin:0 5px;"></div>
-        <button id="toggle-scores-btn" onclick="toggleScoresVisibility()">Mostrar Puntos (P)</button>
-        <div style="width:1px; height: 20px; background:#555; margin:0 5px;"></div>
+        <button onclick="organize('score')">🌟 Puntuación</button>
+        <button id="toggle-scores-btn" onclick="toggleScoresVisibility()">Ver Puntos (P)</button>
         <button class="primary" onclick="window.location.reload()">Recargar</button>
     </div>
 
     <div id="viewport">
         <div id="selection-box"></div>
-        <div id="board-content">
-            </div>
+        <div id="board-content"></div>
     </div>
 
     <script>
         // --- CONSTANTES Y ESTADO ---
-        const CARD_W = 212;
-        const CARD_H = 296;
-
+        const CARD_W = 212, CARD_H = 296;
         const families = [
-            { code: 'h', name: 'Humanos', icon: '🧑‍🌾' },
-            { code: 'a', name: 'Aliens', icon: '👽' },
-            { code: 'v', name: 'Vampiros', icon: '🧛' },
-            { code: 'z', name: 'Zombies', icon: '🧟' },
+            { code: 'h', name: 'Humanos', icon: '🧑‍🌾' }, { code: 'a', name: 'Aliens', icon: '👽' },
+            { code: 'v', name: 'Vampiros', icon: '🧛' }, { code: 'z', name: 'Zombies', icon: '🧟' },
             { code: 'l', name: 'Licántropos', icon: '🐺' }
         ];
-
         const ranks = Array.from({length: 13}, (_, i) => i + 1);
         const totalItems = 43; 
 
-        let deck = [];
-        let loaded = 0;
-        let missing = 0;
-
+        let deck = [], loaded = 0, missing = 0;
         let cardScores = JSON.parse(localStorage.getItem('paranormanimals_scores')) || {};
         let scoresVisible = false;
+        
         let hoveredCardId = null; 
+        let activeTargetCardId = null; // Para la barra táctil
         
         let toastTimeout;
         function showToast(message, color = "rgba(76, 175, 80, 0.9)") {
             const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.style.background = color;
-            toast.style.opacity = 1;
-            clearTimeout(toastTimeout);
-            toastTimeout = setTimeout(() => toast.style.opacity = 0, 2000);
+            toast.innerText = message; toast.style.background = color; toast.style.opacity = 1;
+            clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.style.opacity = 0, 2000);
         }
 
         // --- 1. GENERAR MAZO ---
         function initDeck() {
-            deck = [];
             families.forEach(fam => {
-                const backImg = `${fam.code}r.png`;
                 ranks.forEach(val => {
                     let label = val;
-                    if(val === 1) label = 'A';
-                    if(val === 11) label = 'J';
-                    if(val === 12) label = 'Q';
-                    if(val === 13) label = 'K';
-
-                    deck.push({
-                        id: `${fam.code}-${val}`, fam: fam.code, type: 'char', val: val, label: label,
-                        icon: fam.icon, src: `${fam.code}${val}.png`, backSrc: backImg, x: 0, y: 0, flipped: false
-                    });
+                    if(val===1) label='A'; if(val===11) label='J'; if(val===12) label='Q'; if(val===13) label='K';
+                    deck.push({ id: `${fam.code}-${val}`, fam: fam.code, type: 'char', val: val, label: label, icon: fam.icon, src: `${fam.code}${val}.png`, backSrc: `${fam.code}r.png`, x: 0, y: 0, flipped: false, lastTap: 0 });
                 });
             });
-
-            const itemBack = 'ir.png';
             for (let i = 1; i <= totalItems; i++) {
-                deck.push({
-                    id: `i-${i}`, fam: 'i', type: 'item', val: i, label: `ITEM ${i}`,
-                    icon: '🎒', src: `i${i}.png`, backSrc: itemBack, x: 0, y: 0, flipped: false
-                });
+                deck.push({ id: `i-${i}`, fam: 'i', type: 'item', val: i, label: `ITEM ${i}`, icon: '🎒', src: `i${i}.png`, backSrc: 'ir.png', x: 0, y: 0, flipped: false, lastTap: 0 });
             }
         }
 
@@ -279,83 +245,66 @@
 
             deck.forEach(card => {
                 const el = document.createElement('div');
-                el.className = `card-container fam-${card.fam}`;
-                el.id = `c-${card.id}`;
-                
-                card.x = (Math.random() - 0.5) * scatter;
-                card.y = (Math.random() - 0.5) * scatter;
+                el.className = `card-container fam-${card.fam}`; el.id = `c-${card.id}`;
+                card.x = (Math.random() - 0.5) * scatter; card.y = (Math.random() - 0.5) * scatter;
                 el.style.transform = `translate(${card.x}px, ${card.y}px)`;
 
                 const score = cardScores[card.id];
-                const hasScoreClass = score ? 'has-score' : '';
-                const scoreColorClass = score ? `score-color-${score}` : '';
-                const scoreValue = score || '';
-
                 el.innerHTML = `
-                    <div class="score-badge ${hasScoreClass} ${scoreColorClass}">${scoreValue}</div>
+                    <div class="score-badge ${score ? 'has-score score-color-'+score : ''}">${score || ''}</div>
                     <div class="card-inner">
                         <div class="card-face front">
                             <img src="${card.src}" class="bleed-image" onload="onImgLoad()" onerror="onImgError(this)">
-                            <div class="card-placeholder">
-                                <div class="ph-icon">${card.icon}</div>
-                                <div class="ph-val">${card.label}</div>
-                                <div class="ph-fam">${card.fam}</div>
-                            </div>
+                            <div class="card-placeholder"><div class="ph-icon">${card.icon}</div><div class="ph-val">${card.label}</div><div class="ph-fam">${card.fam}</div></div>
                         </div>
-                        <div class="card-face back">
-                            <img src="${card.backSrc}" class="bleed-image">
-                        </div>
+                        <div class="card-face back"><img src="${card.backSrc}" class="bleed-image"></div>
                     </div>
                 `;
 
+                // Eventos Mouse
                 el.addEventListener('mouseenter', () => hoveredCardId = card.id);
                 el.addEventListener('mouseleave', () => { if(hoveredCardId === card.id) hoveredCardId = null; });
-
                 el.addEventListener('mousedown', (e) => handleCardInteract(e, el, card));
                 el.addEventListener('dblclick', (e) => toggleFlip(el, card));
+                
+                // Eventos Touch (Móvil)
+                el.addEventListener('touchstart', (e) => handleTouchCardStart(e, el, card), {passive: false});
 
-                board.appendChild(el);
-                cardElements.set(card.id, el);
+                board.appendChild(el); cardElements.set(card.id, el);
             });
             updateUI();
         }
 
         function onImgLoad() { loaded++; updateUI(); }
-        function onImgError(img) { 
-            missing++; 
-            const container = img.closest('.card-container');
-            if(container) container.classList.add('missing');
-            updateUI(); 
-        }
-        function updateUI() {
-            const ratedCount = Object.keys(cardScores).length;
-            document.getElementById('stats').innerText = 
-                `Cartas: ${deck.length} | OK: ${loaded} | Missing: ${missing} | Puntuadas: ${ratedCount}`;
-        }
+        function onImgError(img) { missing++; const c = img.closest('.card-container'); if(c) c.classList.add('missing'); updateUI(); }
+        function updateUI() { document.getElementById('stats').innerText = `Cartas: ${deck.length} | OK: ${loaded} | Missing: ${missing} | Puntos: ${Object.keys(cardScores).length}`; }
 
         function toggleFlip(el, card) {
             card.flipped = !card.flipped;
-            if(card.flipped) el.classList.add('flipped');
-            else el.classList.remove('flipped');
+            if(card.flipped) el.classList.add('flipped'); else el.classList.remove('flipped');
         }
 
         // --- SISTEMA DE PUNTUACIONES ---
-        
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'p') {
-                toggleScoresVisibility();
-                return;
-            }
-
-            if (hoveredCardId && /^[0-9]$/.test(e.key)) {
-                let score = parseInt(e.key);
-                if (score === 0) score = 10; 
-                assignScore(hoveredCardId, score);
+            if (e.key.toLowerCase() === 'p') { toggleScoresVisibility(); return; }
+            const targetId = hoveredCardId || activeTargetCardId;
+            if (targetId && /^[0-9]$/.test(e.key)) {
+                let score = parseInt(e.key); if (score === 0) score = 10; 
+                assignScore(targetId, score);
             }
         });
 
+        function scoreActiveCard(score) {
+            if(activeTargetCardId) assignScore(activeTargetCardId, score);
+        }
+
         function assignScore(cardId, score) {
-            cardScores[cardId] = score;
+            if (score === null) {
+                delete cardScores[cardId];
+            } else {
+                cardScores[cardId] = score;
+            }
+            
             localStorage.setItem('paranormanimals_scores', JSON.stringify(cardScores));
 
             const el = cardElements.get(cardId);
@@ -363,41 +312,47 @@
             
             for(let i=1; i<=10; i++) badge.classList.remove(`score-color-${i}`);
             
-            badge.innerText = score;
-            badge.classList.add('has-score', `score-color-${score}`);
-
-            if (!scoresVisible) {
-                toggleScoresVisibility(true);
+            if (score) {
+                badge.innerText = score;
+                badge.classList.add('has-score', `score-color-${score}`);
+                if (!scoresVisible) toggleScoresVisibility(true);
+                badge.style.transform = 'scale(1.3) rotate(15deg)';
+                setTimeout(() => { if(scoresVisible) badge.style.transform = 'scale(1) rotate(5deg)'; }, 200);
+                showToast(`Puntuación ${score} asignada`, '#2196F3');
+            } else {
+                badge.classList.remove('has-score');
+                showToast(`Puntuación borrada`);
             }
-
-            badge.style.transform = 'scale(1.3) rotate(15deg)';
-            setTimeout(() => {
-                if(scoresVisible) badge.style.transform = 'scale(1) rotate(5deg)';
-            }, 200);
-
-            showToast(`Puntuación ${score} asignada`, '#2196F3');
             updateUI(); 
         }
 
         function toggleScoresVisibility(forceState = null) {
             scoresVisible = forceState !== null ? forceState : !scoresVisible;
             const btn = document.getElementById('toggle-scores-btn');
-            
             if (scoresVisible) {
-                document.body.classList.add('show-scores');
-                btn.classList.add('active-toggle');
-                btn.innerText = 'Ocultar Puntos (P)';
+                document.body.classList.add('show-scores'); btn.classList.add('active-toggle'); btn.innerText = 'Ocultar Puntos (P)';
                 if(forceState === null) showToast('Puntuaciones Visibles');
             } else {
-                document.body.classList.remove('show-scores');
-                btn.classList.remove('active-toggle');
-                btn.innerText = 'Mostrar Puntos (P)';
+                document.body.classList.remove('show-scores'); btn.classList.remove('active-toggle'); btn.innerText = 'Mostrar Puntos (P)';
                 if(forceState === null) showToast('Puntuaciones Ocultas', '#f44336');
             }
         }
 
+        function setActiveCard(cardId) {
+            if(activeTargetCardId) {
+                const oldEl = cardElements.get(activeTargetCardId);
+                if(oldEl) oldEl.classList.remove('active-target');
+            }
+            activeTargetCardId = cardId;
+            if(cardId) {
+                cardElements.get(cardId).classList.add('active-target');
+                document.getElementById('score-bar').classList.add('visible');
+            } else {
+                document.getElementById('score-bar').classList.remove('visible');
+            }
+        }
 
-        // --- INPUT HANDLING ---
+        // --- INPUT HANDLING (MOUSE & TOUCH) ---
         const viewport = document.getElementById('viewport');
         const selectionBox = document.getElementById('selection-box');
         
@@ -405,90 +360,133 @@
         let isPanning = false; let startPan = { x: 0, y: 0 };
         let isSelecting = false; let selectStart = { x: 0, y: 0 };
         let selectedCards = new Set(); 
+        
+        // Variables Touch
+        let touchMode = 'none'; // 'pan', 'drag', 'pinch'
+        let initialPinchDist = 0; let startViewScale = 1;
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
+        // MOUSE
         viewport.addEventListener('mousedown', (e) => {
             if (e.button === 1) {
-                e.preventDefault(); isPanning = true;
-                startPan = { x: e.clientX - view.x, y: e.clientY - view.y };
+                e.preventDefault(); isPanning = true; startPan = { x: e.clientX - view.x, y: e.clientY - view.y };
                 viewport.style.cursor = 'grabbing'; return;
             }
             if (e.button === 0 && (e.target === viewport || e.target === board)) {
-                clearSelection(); isSelecting = true;
+                clearSelection(); setActiveCard(null); isSelecting = true;
                 selectStart = { x: e.clientX, y: e.clientY };
-                selectionBox.style.display = 'block';
-                selectionBox.style.left = `${e.clientX}px`; selectionBox.style.top = `${e.clientY}px`;
+                selectionBox.style.display = 'block'; selectionBox.style.left = `${e.clientX}px`; selectionBox.style.top = `${e.clientY}px`;
                 selectionBox.style.width = '0px'; selectionBox.style.height = '0px';
             }
         });
 
         function handleCardInteract(e, el, card) {
             if (e.button === 1) return; 
-            e.stopPropagation(); 
+            e.stopPropagation(); setActiveCard(card.id);
 
             if (e.button === 2) { toggleFlip(el, card); return; }
 
             if (e.button === 0) {
-                if (!selectedCards.has(card.id)) {
-                    clearSelection(); selectedCards.add(card.id); el.classList.add('selected');
-                }
-
-                const startMouseX = (e.clientX - view.x) / view.s;
-                const startMouseY = (e.clientY - view.y) / view.s;
-                
+                if (!selectedCards.has(card.id)) { clearSelection(); selectedCards.add(card.id); el.classList.add('selected'); }
+                const startMouseX = (e.clientX - view.x) / view.s; const startMouseY = (e.clientY - view.y) / view.s;
                 let dragGroup = [];
                 selectedCards.forEach(id => {
-                    const c = deck.find(x => x.id === id);
-                    const domEl = cardElements.get(id);
-                    domEl.classList.add('dragging');
-                    dragGroup.push({ card: c, el: domEl, startX: c.x, startY: c.y });
+                    const c = deck.find(x => x.id === id); const domEl = cardElements.get(id);
+                    domEl.classList.add('dragging'); dragGroup.push({ card: c, el: domEl, startX: c.x, startY: c.y });
                 });
 
                 function move(ev) {
-                    const mx = (ev.clientX - view.x) / view.s;
-                    const my = (ev.clientY - view.y) / view.s;
-                    const deltaX = mx - startMouseX;
-                    const deltaY = my - startMouseY;
-
+                    const mx = (ev.clientX - view.x) / view.s; const my = (ev.clientY - view.y) / view.s;
                     dragGroup.forEach(item => {
-                        item.card.x = item.startX + deltaX; item.card.y = item.startY + deltaY;
+                        item.card.x = item.startX + (mx - startMouseX); item.card.y = item.startY + (my - startMouseY);
                         item.el.style.transform = `translate(${item.card.x}px, ${item.card.y}px)`;
                     });
                 }
-
-                function stop() {
-                    dragGroup.forEach(item => item.el.classList.remove('dragging'));
-                    window.removeEventListener('mousemove', move);
-                    window.removeEventListener('mouseup', stop);
-                }
-
+                function stop() { dragGroup.forEach(item => item.el.classList.remove('dragging')); window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', stop); }
                 window.addEventListener('mousemove', move); window.addEventListener('mouseup', stop);
             }
         }
 
-        window.addEventListener('mousemove', (e) => {
-            if(isPanning) {
-                e.preventDefault(); view.x = e.clientX - startPan.x; view.y = e.clientY - startPan.y; updateView();
+        // TOUCH GESTURES (MÓVIL)
+        viewport.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault(); touchMode = 'pinch';
+                initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                startViewScale = view.s;
+            } else if (e.touches.length === 1 && (e.target === viewport || e.target === board)) {
+                // e.preventDefault(); // Comentado para permitir tap en botones
+                touchMode = 'pan'; clearSelection(); setActiveCard(null);
+                startPan = { x: e.touches[0].clientX - view.x, y: e.touches[0].clientY - view.y };
             }
+        }, {passive: false});
+
+        function handleTouchCardStart(e, el, card) {
+            if (e.touches.length === 1) {
+                e.stopPropagation(); // e.preventDefault(); 
+                
+                // Doble tap detection
+                const now = Date.now();
+                if (now - card.lastTap < 300) { toggleFlip(el, card); card.lastTap = 0; return; }
+                card.lastTap = now;
+
+                setActiveCard(card.id); clearSelection(); selectedCards.add(card.id);
+                el.classList.add('selected', 'dragging');
+                
+                touchMode = 'drag';
+                const startTouchX = (e.touches[0].clientX - view.x) / view.s;
+                const startTouchY = (e.touches[0].clientY - view.y) / view.s;
+                const startCardX = card.x; const startCardY = card.y;
+
+                function touchMove(ev) {
+                    if(touchMode !== 'drag' || ev.touches.length !== 1) return;
+                    ev.preventDefault(); // Previene scroll de la pantalla
+                    const mx = (ev.touches[0].clientX - view.x) / view.s; const my = (ev.touches[0].clientY - view.y) / view.s;
+                    card.x = startCardX + (mx - startTouchX); card.y = startCardY + (my - startTouchY);
+                    el.style.transform = `translate(${card.x}px, ${card.y}px)`;
+                }
+                function touchEnd() { el.classList.remove('dragging'); window.removeEventListener('touchmove', touchMove); window.removeEventListener('touchend', touchEnd); }
+                window.addEventListener('touchmove', touchMove, {passive: false}); window.addEventListener('touchend', touchEnd);
+            }
+        }
+
+        window.addEventListener('touchmove', (e) => {
+            if (touchMode === 'pan' && e.touches.length === 1) {
+                e.preventDefault(); view.x = e.touches[0].clientX - startPan.x; view.y = e.touches[0].clientY - startPan.y; updateView();
+            } else if (touchMode === 'pinch' && e.touches.length === 2) {
+                e.preventDefault();
+                const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                const scaleFactor = currentDist / initialPinchDist;
+                
+                // Hacemos zoom respecto al centro de los dedos
+                const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
+                const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
+                
+                const newScale = Math.min(Math.max(0.05, startViewScale * scaleFactor), 4);
+                
+                // Ajuste de paneo para centrar el zoom
+                view.x -= ((centerX - view.x) / view.s) * (newScale - view.s);
+                view.y -= ((centerY - view.y) / view.s) * (newScale - view.s);
+                view.s = newScale; updateView();
+            }
+        }, {passive: false});
+
+        window.addEventListener('touchend', (e) => { if(e.touches.length === 0) touchMode = 'none'; });
+
+        // GLOBALS MOUSE MOVE (DESKTOP)
+        window.addEventListener('mousemove', (e) => {
+            if(isPanning) { e.preventDefault(); view.x = e.clientX - startPan.x; view.y = e.clientY - startPan.y; updateView(); }
             if(isSelecting) {
                 const currentX = e.clientX; const currentY = e.clientY;
-                const rect = {
-                    left: Math.min(selectStart.x, currentX), right: Math.max(selectStart.x, currentX),
-                    top: Math.min(selectStart.y, currentY), bottom: Math.max(selectStart.y, currentY)
-                };
-
+                const rect = { left: Math.min(selectStart.x, currentX), right: Math.max(selectStart.x, currentX), top: Math.min(selectStart.y, currentY), bottom: Math.max(selectStart.y, currentY) };
                 selectionBox.style.left = `${rect.left}px`; selectionBox.style.top = `${rect.top}px`;
                 selectionBox.style.width = `${rect.right - rect.left}px`; selectionBox.style.height = `${rect.bottom - rect.top}px`;
-
                 const worldLeft = (rect.left - view.x) / view.s; const worldRight = (rect.right - view.x) / view.s;
                 const worldTop = (rect.top - view.y) / view.s; const worldBottom = (rect.bottom - view.y) / view.s;
-
                 deck.forEach(c => {
                     const isIntersecting = !(worldRight < c.x || worldLeft > c.x + CARD_W || worldBottom < c.y || worldTop > c.y + CARD_H);
                     const el = cardElements.get(c.id);
-                    if (isIntersecting) { selectedCards.add(c.id); el.classList.add('selected'); } 
-                    else { selectedCards.delete(c.id); el.classList.remove('selected'); }
+                    if (isIntersecting) { selectedCards.add(c.id); el.classList.add('selected'); } else { selectedCards.delete(c.id); el.classList.remove('selected'); }
                 });
             }
         });
@@ -498,84 +496,37 @@
             if (isSelecting) { isSelecting = false; selectionBox.style.display = 'none'; }
         });
 
-        function clearSelection() {
-            selectedCards.forEach(id => { const el = cardElements.get(id); if (el) el.classList.remove('selected'); });
-            selectedCards.clear();
-        }
+        function clearSelection() { selectedCards.forEach(id => { const el = cardElements.get(id); if (el) el.classList.remove('selected'); }); selectedCards.clear(); }
 
         viewport.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            const factor = e.deltaY > 0 ? 0.9 : 1.1;
+            e.preventDefault(); const factor = e.deltaY > 0 ? 0.9 : 1.1;
             const mouseX = (e.clientX - view.x) / view.s; const mouseY = (e.clientY - view.y) / view.s;
             const newScale = Math.min(Math.max(0.05, view.s * factor), 4);
             view.x -= mouseX * (newScale - view.s); view.y -= mouseY * (newScale - view.s);
             view.s = newScale; updateView();
         }, { passive: false });
 
-        function updateView() {
-            board.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`;
-        }
+        function updateView() { board.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`; }
 
         // --- ORGANIZACIÓN ---
         function organize(mode) {
             const W = 230; const H = 310;
             let startX = -((13 * W) / 2); let startY = -((10 * H) / 2);
-
             if (mode === 'family') {
-                ['h', 'a', 'v', 'z', 'l'].forEach((fam, row) => {
-                    deck.filter(c => c.fam === fam).sort((a,b) => a.val - b.val).forEach((c, col) => {
-                        c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c);
-                    });
-                });
-                deck.filter(c => c.fam === 'i').forEach((c, i) => {
-                    const col = i % 10; const row = Math.floor(i / 10) + 6;
-                    c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c);
-                });
-
+                ['h', 'a', 'v', 'z', 'l'].forEach((fam, row) => { deck.filter(c => c.fam === fam).sort((a,b) => a.val - b.val).forEach((c, col) => { c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c); }); });
+                deck.filter(c => c.fam === 'i').forEach((c, i) => { const col = i % 10; const row = Math.floor(i / 10) + 6; c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c); });
             } else if (mode === 'value') {
                 const famMap = { 'h':0, 'a':1, 'v':2, 'z':3, 'l':4 };
-                deck.forEach(c => {
-                    if (c.type === 'char') {
-                        c.x = startX + (famMap[c.fam] * W); c.y = startY + (c.val * H);
-                    } else {
-                        const iCol = 6 + Math.floor((c.val-1)/13); const iRow = ((c.val-1)%13) + 1;
-                        c.x = startX + (iCol * W); c.y = startY + (iRow * H);
-                    }
-                    updatePos(c);
-                });
+                deck.forEach(c => { if (c.type === 'char') { c.x = startX + (famMap[c.fam] * W); c.y = startY + (c.val * H); } else { const iCol = 6 + Math.floor((c.val-1)/13); const iRow = ((c.val-1)%13) + 1; c.x = startX + (iCol * W); c.y = startY + (iRow * H); } updatePos(c); });
             } else if (mode === 'score') {
                 if(!scoresVisible) toggleScoresVisibility(true); 
-
-                const sortedDeck = [...deck].sort((a, b) => {
-                    const scoreA = cardScores[a.id] || -1; 
-                    const scoreB = cardScores[b.id] || -1;
-                    
-                    if (scoreA !== scoreB) return scoreB - scoreA; 
-                    
-                    if (a.fam !== b.fam) return a.fam.localeCompare(b.fam);
-                    return a.val - b.val;
-                });
-
-                const COLS = 13;
-                sortedDeck.forEach((c, index) => {
-                    const col = index % COLS;
-                    const row = Math.floor(index / COLS);
-                    c.x = startX + (col * W);
-                    c.y = startY + (row * H);
-                    updatePos(c);
-                });
+                const sortedDeck = [...deck].sort((a, b) => { const scoreA = cardScores[a.id] || -1; const scoreB = cardScores[b.id] || -1; if (scoreA !== scoreB) return scoreB - scoreA; if (a.fam !== b.fam) return a.fam.localeCompare(b.fam); return a.val - b.val; });
+                const COLS = 13; sortedDeck.forEach((c, index) => { const col = index % COLS; const row = Math.floor(index / COLS); c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c); });
             }
         }
+        function updatePos(c) { const el = cardElements.get(c.id); if(el) el.style.transform = `translate(${c.x}px, ${c.y}px)`; }
 
-        function updatePos(c) {
-            const el = cardElements.get(c.id);
-            if(el) el.style.transform = `translate(${c.x}px, ${c.y}px)`;
-        }
-
-        render();
-        updateView();
-        setTimeout(() => organize('family'), 100);
-
+        render(); updateView(); setTimeout(() => organize('family'), 100);
     </script>
 </body>
 </html>
