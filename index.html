@@ -28,28 +28,69 @@
             background-color: var(--bg-color);
             background-image: radial-gradient(var(--dot-color) 1px, transparent 1px);
             background-size: 20px 20px; color: white; user-select: none;
-            /* Previene gestos táctiles nativos del navegador como refrescar al tirar hacia abajo */
             touch-action: none; 
         }
 
-        /* UI CONTROLS - Adaptados a móvil */
-        #ui-layer {
+        /* UI CONTROLS - NUEVO DOCK RESPONSIVO */
+        #ui-dock {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 8px; align-items: center; z-index: 2000;
-            background: rgba(0, 0, 0, 0.85); padding: 10px 15px;
-            border-radius: 50px; backdrop-filter: blur(8px);
-            border: 1px solid #444; box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-            flex-wrap: wrap; justify-content: center; width: 90%; max-width: 600px;
+            background: rgba(15, 15, 15, 0.85); border: 1px solid #444;
+            border-radius: 50px; padding: 12px 24px;
+            backdrop-filter: blur(10px); z-index: 2000;
+            display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        #menu-content { display: flex; gap: 15px; align-items: center; }
+        .menu-group { display: flex; gap: 8px; align-items: center; }
+        
+        .menu-label { 
+            font-size: 0.75rem; color: #888; text-transform: uppercase; 
+            letter-spacing: 1px; font-weight: bold; margin-right: 5px;
+        }
+        .menu-hint {
+            font-size: 0.8rem; color: #aaa; background: #222; 
+            padding: 6px 12px; border-radius: 15px; border: 1px dotted #555;
+        }
+        
+        .menu-divider { width: 1px; height: 24px; background: #555; }
+        
+        #menu-toggle { 
+            display: none; background: transparent; border: none; 
+            color: white; font-size: 1rem; font-weight: bold; 
+            cursor: pointer; padding: 5px; width: 100%;
         }
 
         button {
             background: #333; border: 1px solid #555; color: #ddd;
-            padding: 8px 12px; border-radius: 20px; cursor: pointer;
+            padding: 8px 14px; border-radius: 20px; cursor: pointer;
             font-size: 0.85rem; transition: all 0.2s ease; white-space: nowrap;
         }
         button:hover { background: #555; color: white; transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
         button.primary { background: var(--color-h); color: #000; border: none; font-weight: bold; }
         button.active-toggle { background: #ffc107; color: #000; border-color: #ff9800; }
+
+        /* Media Query para Móviles */
+        @media (max-width: 900px) {
+            #ui-dock { 
+                border-radius: 25px; width: 85%; max-width: 350px; 
+                padding: 10px 20px; bottom: 15px;
+            }
+            #menu-toggle { display: flex; justify-content: center; align-items: center; gap: 10px;}
+            #menu-content { 
+                display: none; flex-direction: column; 
+                width: 100%; margin-top: 15px; gap: 15px;
+            }
+            #ui-dock.open #menu-content { display: flex; }
+            #ui-dock.open #menu-toggle { padding-bottom: 15px; border-bottom: 1px solid #444; margin-bottom: 5px; }
+            .menu-group { flex-direction: column; width: 100%; align-items: stretch; }
+            .menu-divider { width: 100%; height: 1px; }
+            .menu-label { text-align: center; margin-bottom: 5px; margin-right: 0;}
+            .menu-hint { text-align: center; }
+            button { width: 100%; padding: 12px; font-size: 0.95rem; }
+        }
 
         #stats {
             position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
@@ -67,7 +108,7 @@
 
         /* SCORE BAR (MOBILE FRIENDLY) */
         #score-bar {
-            position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px);
+            position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
             display: flex; gap: 5px; background: rgba(30, 30, 30, 0.95);
             padding: 10px; border-radius: 15px; border: 2px solid #4dabf7;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 2500;
@@ -97,12 +138,10 @@
             perspective: 1000px; cursor: grab; transition: filter 0.2s ease;
         }
         
-        /* Desktop hover */
         @media (hover: hover) {
             .card-container:hover .card-inner { box-shadow: 0 0 15px rgba(255, 255, 255, 0.3), var(--shadow-level-1); }
         }
 
-        /* Active card target (replaces hover for touch) */
         .card-container.active-target .card-inner { box-shadow: 0 0 0 4px #4dabf7, var(--shadow-level-1); }
         .card-container.selected .card-inner { box-shadow: 0 0 0 3px #4dabf7, var(--shadow-level-1); }
         .card-container:hover { z-index: 100; }
@@ -183,12 +222,32 @@
         <button class="score-btn btn-clear" onclick="scoreActiveCard(null)">Borrar</button>
     </div>
 
-    <div id="ui-layer">
-        <button onclick="organize('family')">Familias</button>
-        <button onclick="organize('value')">Valor</button>
-        <button onclick="organize('score')">🌟 Puntuación</button>
-        <button id="toggle-scores-btn" onclick="toggleScoresVisibility()">Ver Puntos (P)</button>
-        <button class="primary" onclick="window.location.reload()">Recargar</button>
+    <div id="ui-dock">
+        <button id="menu-toggle" onclick="document.getElementById('ui-dock').classList.toggle('open')">
+            <span>☰</span> Menú de Herramientas
+        </button>
+        
+        <div id="menu-content">
+            <div class="menu-group">
+                <span class="menu-label">Ordenar:</span>
+                <button onclick="organize('family')">Familia (F)</button>
+                <button onclick="organize('value')">Valor (V)</button>
+                <button onclick="organize('score')">Puntos (P)</button>
+            </div>
+            
+            <div class="menu-divider"></div>
+            
+            <div class="menu-group">
+                <span class="menu-label">Acciones:</span>
+                <span class="menu-hint">Puntuar (0~9)</span>
+                <button id="toggle-scores-btn" onclick="toggleScoresVisibility()">Mostrar (O)</button>
+                <button onclick="flipSelectedCards()">Girar (R)</button>
+            </div>
+
+            <div class="menu-divider"></div>
+            
+            <button class="primary" onclick="window.location.reload()">Recargar</button>
+        </div>
     </div>
 
     <div id="viewport">
@@ -212,7 +271,7 @@
         let scoresVisible = false;
         
         let hoveredCardId = null; 
-        let activeTargetCardId = null; // Para la barra táctil
+        let activeTargetCardId = null; 
         
         let toastTimeout;
         function showToast(message, color = "rgba(76, 175, 80, 0.9)") {
@@ -261,13 +320,11 @@
                     </div>
                 `;
 
-                // Eventos Mouse
                 el.addEventListener('mouseenter', () => hoveredCardId = card.id);
                 el.addEventListener('mouseleave', () => { if(hoveredCardId === card.id) hoveredCardId = null; });
                 el.addEventListener('mousedown', (e) => handleCardInteract(e, el, card));
                 el.addEventListener('dblclick', (e) => toggleFlip(el, card));
                 
-                // Eventos Touch (Móvil)
                 el.addEventListener('touchstart', (e) => handleTouchCardStart(e, el, card), {passive: false});
 
                 board.appendChild(el); cardElements.set(card.id, el);
@@ -277,33 +334,59 @@
 
         function onImgLoad() { loaded++; updateUI(); }
         function onImgError(img) { missing++; const c = img.closest('.card-container'); if(c) c.classList.add('missing'); updateUI(); }
-        function updateUI() { document.getElementById('stats').innerText = `Cartas: ${deck.length} | OK: ${loaded} | Missing: ${missing} | Puntos: ${Object.keys(cardScores).length}`; }
+        function updateUI() { document.getElementById('stats').innerText = `Cartas: ${deck.length} | OK: ${loaded} | Error: ${missing} | Puntos: ${Object.keys(cardScores).length}`; }
 
         function toggleFlip(el, card) {
             card.flipped = !card.flipped;
             if(card.flipped) el.classList.add('flipped'); else el.classList.remove('flipped');
         }
 
-        // --- SISTEMA DE PUNTUACIONES ---
+        function flipSelectedCards() {
+            let targetIds = selectedCards.size > 0 ? Array.from(selectedCards) : (activeTargetCardId ? [activeTargetCardId] : (hoveredCardId ? [hoveredCardId] : []));
+            if (targetIds.length === 0) { showToast("Selecciona una carta primero", "#ff9800"); return; }
+            targetIds.forEach(id => {
+                const el = cardElements.get(id); const card = deck.find(c => c.id === id);
+                if(el && card) toggleFlip(el, card);
+            });
+        }
+
+        // --- GESTIÓN DE TECLADO ---
         window.addEventListener('keydown', (e) => {
-            if (e.key.toLowerCase() === 'p') { toggleScoresVisibility(); return; }
-            const targetId = hoveredCardId || activeTargetCardId;
-            if (targetId && /^[0-9]$/.test(e.key)) {
+            const key = e.key.toLowerCase();
+            
+            // Acciones Globales
+            if (key === 'o') { toggleScoresVisibility(); return; }
+            if (key === 'f') { organize('family'); return; }
+            if (key === 'v') { organize('value'); return; }
+            if (key === 'p') { organize('score'); return; }
+            if (key === 'r') { flipSelectedCards(); return; }
+
+            // Lógica de Puntuación (Prioridad de Selección)
+            let targetIds = [];
+            if (hoveredCardId) targetIds = [hoveredCardId];
+            else if (selectedCards.size > 0) targetIds = Array.from(selectedCards);
+            else if (activeTargetCardId) targetIds = [activeTargetCardId];
+
+            if (targetIds.length === 0) return; 
+
+            if (/^[0-9]$/.test(e.key)) {
                 let score = parseInt(e.key); if (score === 0) score = 10; 
-                assignScore(targetId, score);
+                targetIds.forEach(id => assignScore(id, score));
+            }
+
+            if (e.key === 'Backspace' || e.key === 'Delete') {
+                targetIds.forEach(id => assignScore(id, null));
             }
         });
 
         function scoreActiveCard(score) {
-            if(activeTargetCardId) assignScore(activeTargetCardId, score);
+            let targetIds = selectedCards.size > 0 ? Array.from(selectedCards) : (activeTargetCardId ? [activeTargetCardId] : []);
+            targetIds.forEach(id => assignScore(id, score));
         }
 
         function assignScore(cardId, score) {
-            if (score === null) {
-                delete cardScores[cardId];
-            } else {
-                cardScores[cardId] = score;
-            }
+            if (score === null) delete cardScores[cardId];
+            else cardScores[cardId] = score;
             
             localStorage.setItem('paranormanimals_scores', JSON.stringify(cardScores));
 
@@ -318,7 +401,7 @@
                 if (!scoresVisible) toggleScoresVisibility(true);
                 badge.style.transform = 'scale(1.3) rotate(15deg)';
                 setTimeout(() => { if(scoresVisible) badge.style.transform = 'scale(1) rotate(5deg)'; }, 200);
-                showToast(`Puntuación ${score} asignada`, '#2196F3');
+                showToast(`Puntuación ${score} guardada`, '#2196F3');
             } else {
                 badge.classList.remove('has-score');
                 showToast(`Puntuación borrada`);
@@ -330,10 +413,10 @@
             scoresVisible = forceState !== null ? forceState : !scoresVisible;
             const btn = document.getElementById('toggle-scores-btn');
             if (scoresVisible) {
-                document.body.classList.add('show-scores'); btn.classList.add('active-toggle'); btn.innerText = 'Ocultar Puntos (P)';
+                document.body.classList.add('show-scores'); btn.classList.add('active-toggle'); btn.innerText = 'Ocultar (O)';
                 if(forceState === null) showToast('Puntuaciones Visibles');
             } else {
-                document.body.classList.remove('show-scores'); btn.classList.remove('active-toggle'); btn.innerText = 'Mostrar Puntos (P)';
+                document.body.classList.remove('show-scores'); btn.classList.remove('active-toggle'); btn.innerText = 'Mostrar (O)';
                 if(forceState === null) showToast('Puntuaciones Ocultas', '#f44336');
             }
         }
@@ -352,7 +435,7 @@
             }
         }
 
-        // --- INPUT HANDLING (MOUSE & TOUCH) ---
+        // --- INPUT HANDLING ---
         const viewport = document.getElementById('viewport');
         const selectionBox = document.getElementById('selection-box');
         
@@ -361,14 +444,15 @@
         let isSelecting = false; let selectStart = { x: 0, y: 0 };
         let selectedCards = new Set(); 
         
-        // Variables Touch
-        let touchMode = 'none'; // 'pan', 'drag', 'pinch'
+        let touchMode = 'none'; 
         let initialPinchDist = 0; let startViewScale = 1;
 
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
-        // MOUSE
         viewport.addEventListener('mousedown', (e) => {
+            // Cerramos menú móvil si hacemos clic fuera
+            document.getElementById('ui-dock').classList.remove('open');
+
             if (e.button === 1) {
                 e.preventDefault(); isPanning = true; startPan = { x: e.clientX - view.x, y: e.clientY - view.y };
                 viewport.style.cursor = 'grabbing'; return;
@@ -382,6 +466,7 @@
         });
 
         function handleCardInteract(e, el, card) {
+            document.getElementById('ui-dock').classList.remove('open');
             if (e.button === 1) return; 
             e.stopPropagation(); setActiveCard(card.id);
 
@@ -408,26 +493,27 @@
             }
         }
 
-        // TOUCH GESTURES (MÓVIL)
         viewport.addEventListener('touchstart', (e) => {
+            document.getElementById('ui-dock').classList.remove('open');
             if (e.touches.length === 2) {
                 e.preventDefault(); touchMode = 'pinch';
                 initialPinchDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 startViewScale = view.s;
             } else if (e.touches.length === 1 && (e.target === viewport || e.target === board)) {
-                // e.preventDefault(); // Comentado para permitir tap en botones
                 touchMode = 'pan'; clearSelection(); setActiveCard(null);
                 startPan = { x: e.touches[0].clientX - view.x, y: e.touches[0].clientY - view.y };
             }
         }, {passive: false});
 
         function handleTouchCardStart(e, el, card) {
+            document.getElementById('ui-dock').classList.remove('open');
             if (e.touches.length === 1) {
-                e.stopPropagation(); // e.preventDefault(); 
+                e.stopPropagation(); 
                 
-                // Doble tap detection
                 const now = Date.now();
-                if (now - card.lastTap < 300) { toggleFlip(el, card); card.lastTap = 0; return; }
+                if (now - card.lastTap < 400) { 
+                    e.preventDefault(); toggleFlip(el, card); card.lastTap = 0; return; 
+                }
                 card.lastTap = now;
 
                 setActiveCard(card.id); clearSelection(); selectedCards.add(card.id);
@@ -440,7 +526,7 @@
 
                 function touchMove(ev) {
                     if(touchMode !== 'drag' || ev.touches.length !== 1) return;
-                    ev.preventDefault(); // Previene scroll de la pantalla
+                    ev.preventDefault(); 
                     const mx = (ev.touches[0].clientX - view.x) / view.s; const my = (ev.touches[0].clientY - view.y) / view.s;
                     card.x = startCardX + (mx - startTouchX); card.y = startCardY + (my - startTouchY);
                     el.style.transform = `translate(${card.x}px, ${card.y}px)`;
@@ -457,14 +543,10 @@
                 e.preventDefault();
                 const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
                 const scaleFactor = currentDist / initialPinchDist;
-                
-                // Hacemos zoom respecto al centro de los dedos
                 const centerX = (e.touches[0].clientX + e.touches[1].clientX) / 2;
                 const centerY = (e.touches[0].clientY + e.touches[1].clientY) / 2;
-                
                 const newScale = Math.min(Math.max(0.05, startViewScale * scaleFactor), 4);
                 
-                // Ajuste de paneo para centrar el zoom
                 view.x -= ((centerX - view.x) / view.s) * (newScale - view.s);
                 view.y -= ((centerY - view.y) / view.s) * (newScale - view.s);
                 view.s = newScale; updateView();
@@ -473,7 +555,6 @@
 
         window.addEventListener('touchend', (e) => { if(e.touches.length === 0) touchMode = 'none'; });
 
-        // GLOBALS MOUSE MOVE (DESKTOP)
         window.addEventListener('mousemove', (e) => {
             if(isPanning) { e.preventDefault(); view.x = e.clientX - startPan.x; view.y = e.clientY - startPan.y; updateView(); }
             if(isSelecting) {
@@ -508,8 +589,8 @@
 
         function updateView() { board.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`; }
 
-        // --- ORGANIZACIÓN ---
         function organize(mode) {
+            document.getElementById('ui-dock').classList.remove('open'); // Cerrar menú en móvil al hacer click
             const W = 230; const H = 310;
             let startX = -((13 * W) / 2); let startY = -((10 * H) / 2);
             if (mode === 'family') {
