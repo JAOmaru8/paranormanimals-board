@@ -31,7 +31,7 @@
             touch-action: none; 
         }
 
-        /* UI CONTROLS - NUEVO DOCK RESPONSIVO */
+        /* UI CONTROLS - DOCK RESPONSIVO */
         #ui-dock {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: rgba(15, 15, 15, 0.85); border: 1px solid #444;
@@ -72,7 +72,6 @@
         button.primary { background: var(--color-h); color: #000; border: none; font-weight: bold; }
         button.active-toggle { background: #ffc107; color: #000; border-color: #ff9800; }
 
-        /* Media Query para Móviles */
         @media (max-width: 900px) {
             #ui-dock { 
                 border-radius: 25px; width: 85%; max-width: 350px; 
@@ -106,7 +105,7 @@
             opacity: 0; transition: opacity 0.3s; z-index: 3000; pointer-events: none;
         }
 
-        /* SCORE BAR (MOBILE FRIENDLY) */
+        /* SCORE BAR */
         #score-bar {
             position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(20px);
             display: flex; gap: 5px; background: rgba(30, 30, 30, 0.95);
@@ -282,11 +281,19 @@
 
         // --- 1. GENERAR MAZO ---
         function initDeck() {
+            deck = [];
             families.forEach(fam => {
                 ranks.forEach(val => {
                     let label = val;
                     if(val===1) label='A'; if(val===11) label='J'; if(val===12) label='Q'; if(val===13) label='K';
-                    deck.push({ id: `${fam.code}-${val}`, fam: fam.code, type: 'char', val: val, label: label, icon: fam.icon, src: `${fam.code}${val}.png`, backSrc: `${fam.code}r.png`, x: 0, y: 0, flipped: false, lastTap: 0 });
+                    
+                    // Lógica específica para J, Q, K de familias paranormales
+                    let backImg = `${fam.code}r.png`;
+                    if (val >= 11 && ['a', 'l', 'v', 'z'].includes(fam.code)) {
+                        backImg = `${fam.code}r${val}.png`;
+                    }
+
+                    deck.push({ id: `${fam.code}-${val}`, fam: fam.code, type: 'char', val: val, label: label, icon: fam.icon, src: `${fam.code}${val}.png`, backSrc: backImg, x: 0, y: 0, flipped: false, lastTap: 0 });
                 });
             });
             for (let i = 1; i <= totalItems; i++) {
@@ -354,14 +361,12 @@
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             
-            // Acciones Globales
             if (key === 'o') { toggleScoresVisibility(); return; }
             if (key === 'f') { organize('family'); return; }
             if (key === 'v') { organize('value'); return; }
             if (key === 'p') { organize('score'); return; }
             if (key === 'r') { flipSelectedCards(); return; }
 
-            // Lógica de Puntuación (Prioridad de Selección)
             let targetIds = [];
             if (hoveredCardId) targetIds = [hoveredCardId];
             else if (selectedCards.size > 0) targetIds = Array.from(selectedCards);
@@ -450,9 +455,7 @@
         window.addEventListener('contextmenu', (e) => e.preventDefault());
 
         viewport.addEventListener('mousedown', (e) => {
-            // Cerramos menú móvil si hacemos clic fuera
             document.getElementById('ui-dock').classList.remove('open');
-
             if (e.button === 1) {
                 e.preventDefault(); isPanning = true; startPan = { x: e.clientX - view.x, y: e.clientY - view.y };
                 viewport.style.cursor = 'grabbing'; return;
@@ -590,7 +593,7 @@
         function updateView() { board.style.transform = `translate(${view.x}px, ${view.y}px) scale(${view.s})`; }
 
         function organize(mode) {
-            document.getElementById('ui-dock').classList.remove('open'); // Cerrar menú en móvil al hacer click
+            document.getElementById('ui-dock').classList.remove('open'); 
             const W = 230; const H = 310;
             let startX = -((13 * W) / 2); let startY = -((10 * H) / 2);
             if (mode === 'family') {
