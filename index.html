@@ -31,6 +31,11 @@
             touch-action: none; 
         }
 
+        /* DEV MODE CLASSES */
+        .dev-only { display: none !important; }
+        body.dev-mode button.dev-only { display: inline-block !important; }
+        body.dev-mode span.dev-only { display: inline-block !important; }
+
         /* UI CONTROLS - DOCK RESPONSIVO */
         #ui-dock {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
@@ -73,6 +78,7 @@
         button.active-toggle { background: #ffc107; color: #000; border-color: #ff9800; }
 
         @media (max-width: 900px) {
+            body.dev-mode button.dev-only { display: block !important; width: 100%; }
             #ui-dock { 
                 border-radius: 25px; width: 85%; max-width: 350px; 
                 padding: 10px 20px; bottom: 15px;
@@ -87,14 +93,16 @@
             .menu-group { flex-direction: column; width: 100%; align-items: stretch; }
             .menu-divider { width: 100%; height: 1px; }
             .menu-label { text-align: center; margin-bottom: 5px; margin-right: 0;}
-            .menu-hint { text-align: center; }
+            .menu-hint { text-align: center; display: block; }
             button { width: 100%; padding: 12px; font-size: 0.95rem; }
         }
 
         #stats {
             position: fixed; top: 20px; left: 20px; background: rgba(0,0,0,0.7);
             padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; color: #ccc;
-            pointer-events: none; z-index: 2000; border: 1px solid #444;
+            z-index: 2000; border: 1px solid #444;
+            /* Activado para permitir los toques del Dev Mode */
+            pointer-events: auto; cursor: pointer; user-select: none;
         }
 
         /* TOAST NOTIFICATIONS */
@@ -205,9 +213,9 @@
 <body>
 
     <div id="toast">Acción completada</div>
-    <div id="stats">Cargando mesa...</div>
+    <div id="stats" title="Pulsa 3 veces para Modo Desarrollo">Cargando mesa...</div>
 
-    <div id="score-bar">
+    <div id="score-bar" class="dev-only">
         <button class="score-btn score-color-1" onclick="scoreActiveCard(1)">1</button>
         <button class="score-btn score-color-2" onclick="scoreActiveCard(2)">2</button>
         <button class="score-btn score-color-3" onclick="scoreActiveCard(3)">3</button>
@@ -231,15 +239,15 @@
                 <span class="menu-label">Ordenar:</span>
                 <button onclick="organize('family')">Familia (F)</button>
                 <button onclick="organize('value')">Valor (V)</button>
-                <button onclick="organize('score')">Puntos (P)</button>
+                <button class="dev-only" onclick="organize('score')">Puntos (P)</button>
             </div>
             
             <div class="menu-divider"></div>
             
             <div class="menu-group">
                 <span class="menu-label">Acciones:</span>
-                <span class="menu-hint">Puntuar (0~9)</span>
-                <button id="toggle-scores-btn" onclick="toggleScoresVisibility()">Mostrar (O)</button>
+                <span class="menu-hint dev-only">Puntuar (0~9)</span>
+                <button id="toggle-scores-btn" class="dev-only" onclick="toggleScoresVisibility()">Mostrar (O)</button>
                 <button onclick="flipSelectedCards()">Girar (R)</button>
             </div>
 
@@ -268,6 +276,7 @@
         let deck = [], loaded = 0, missing = 0;
         let cardScores = JSON.parse(localStorage.getItem('paranormanimals_scores')) || {};
         let scoresVisible = false;
+        let devMode = false; // Modo Desarrollo Oculto por defecto
         
         let hoveredCardId = null; 
         let activeTargetCardId = null; 
@@ -279,6 +288,34 @@
             clearTimeout(toastTimeout); toastTimeout = setTimeout(() => toast.style.opacity = 0, 2000);
         }
 
+        // --- SISTEMA MODO DESARROLLO (SECRETO) ---
+        function toggleDevMode() {
+            devMode = !devMode;
+            if (devMode) {
+                document.body.classList.add('dev-mode');
+                showToast('🛠️ Modo Desarrollo: Activado', '#9C27B0');
+                if (activeTargetCardId) document.getElementById('score-bar').classList.add('visible');
+            } else {
+                document.body.classList.remove('dev-mode');
+                showToast('🔒 Modo Desarrollo: Oculto', '#f44336');
+                if (scoresVisible) toggleScoresVisibility(false);
+                document.getElementById('score-bar').classList.remove('visible');
+            }
+        }
+
+        let statsTapCount = 0;
+        let statsTapTimer;
+        document.getElementById('stats').addEventListener('click', () => {
+            statsTapCount++;
+            clearTimeout(statsTapTimer);
+            statsTapTimer = setTimeout(() => statsTapCount = 0, 400);
+            if(statsTapCount === 3) {
+                toggleDevMode();
+                statsTapCount = 0;
+            }
+        });
+
+
         // --- 1. GENERAR MAZO ---
         function initDeck() {
             deck = [];
@@ -287,7 +324,6 @@
                     let label = val;
                     if(val===1) label='A'; if(val===11) label='J'; if(val===12) label='Q'; if(val===13) label='K';
                     
-                    // Lógica específica para J, Q, K de familias paranormales
                     let backImg = `${fam.code}r.png`;
                     if (val >= 11 && ['a', 'l', 'v', 'z'].includes(fam.code)) {
                         backImg = `${fam.code}r${val}.png`;
@@ -341,7 +377,7 @@
 
         function onImgLoad() { loaded++; updateUI(); }
         function onImgError(img) { missing++; const c = img.closest('.card-container'); if(c) c.classList.add('missing'); updateUI(); }
-        function updateUI() { document.getElementById('stats').innerText = `Cartas: ${deck.length} | OK: ${loaded} | Error: ${missing} | Puntos: ${Object.keys(cardScores).length}`; }
+        function updateUI() { document.getElementById('stats').innerText = `Cartas: ${deck.length} | OK: ${loaded} | Error: ${missing}`; }
 
         function toggleFlip(el, card) {
             card.flipped = !card.flipped;
@@ -361,11 +397,17 @@
         window.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
             
-            if (key === 'o') { toggleScoresVisibility(); return; }
+            // Atajo Secreto para Modo Dev
+            if (key === 'd' && e.shiftKey) { toggleDevMode(); return; }
+
+            if (key === 'o' && devMode) { toggleScoresVisibility(); return; }
+            if (key === 'p' && devMode) { organize('score'); return; }
+            
             if (key === 'f') { organize('family'); return; }
             if (key === 'v') { organize('value'); return; }
-            if (key === 'p') { organize('score'); return; }
             if (key === 'r') { flipSelectedCards(); return; }
+
+            if (!devMode) return; // Las puntuaciones solo funcionan en Dev Mode
 
             let targetIds = [];
             if (hoveredCardId) targetIds = [hoveredCardId];
@@ -385,6 +427,7 @@
         });
 
         function scoreActiveCard(score) {
+            if(!devMode) return;
             let targetIds = selectedCards.size > 0 ? Array.from(selectedCards) : (activeTargetCardId ? [activeTargetCardId] : []);
             targetIds.forEach(id => assignScore(id, score));
         }
@@ -411,7 +454,6 @@
                 badge.classList.remove('has-score');
                 showToast(`Puntuación borrada`);
             }
-            updateUI(); 
         }
 
         function toggleScoresVisibility(forceState = null) {
@@ -434,7 +476,7 @@
             activeTargetCardId = cardId;
             if(cardId) {
                 cardElements.get(cardId).classList.add('active-target');
-                document.getElementById('score-bar').classList.add('visible');
+                if (devMode) document.getElementById('score-bar').classList.add('visible');
             } else {
                 document.getElementById('score-bar').classList.remove('visible');
             }
@@ -475,6 +517,7 @@
 
             if (e.button === 2) { toggleFlip(el, card); return; }
 
+            // Comportamiento de Ratón (Escritorio): Mover directamente
             if (e.button === 0) {
                 if (!selectedCards.has(card.id)) { clearSelection(); selectedCards.add(card.id); el.classList.add('selected'); }
                 const startMouseX = (e.clientX - view.x) / view.s; const startMouseY = (e.clientY - view.y) / view.s;
@@ -496,6 +539,7 @@
             }
         }
 
+        // TOUCH GESTURES (MÓVIL) - CORREGIDO PRIORIDAD PAN/DRAG
         viewport.addEventListener('touchstart', (e) => {
             document.getElementById('ui-dock').classList.remove('open');
             if (e.touches.length === 2) {
@@ -511,31 +555,41 @@
         function handleTouchCardStart(e, el, card) {
             document.getElementById('ui-dock').classList.remove('open');
             if (e.touches.length === 1) {
-                e.stopPropagation(); 
                 
                 const now = Date.now();
                 if (now - card.lastTap < 400) { 
-                    e.preventDefault(); toggleFlip(el, card); card.lastTap = 0; return; 
+                    e.preventDefault(); e.stopPropagation(); toggleFlip(el, card); card.lastTap = 0; return; 
                 }
                 card.lastTap = now;
 
-                setActiveCard(card.id); clearSelection(); selectedCards.add(card.id);
-                el.classList.add('selected', 'dragging');
-                
-                touchMode = 'drag';
-                const startTouchX = (e.touches[0].clientX - view.x) / view.s;
-                const startTouchY = (e.touches[0].clientY - view.y) / view.s;
-                const startCardX = card.x; const startCardY = card.y;
+                const isAlreadySelected = (activeTargetCardId === card.id);
 
-                function touchMove(ev) {
-                    if(touchMode !== 'drag' || ev.touches.length !== 1) return;
-                    ev.preventDefault(); 
-                    const mx = (ev.touches[0].clientX - view.x) / view.s; const my = (ev.touches[0].clientY - view.y) / view.s;
-                    card.x = startCardX + (mx - startTouchX); card.y = startCardY + (my - startTouchY);
-                    el.style.transform = `translate(${card.x}px, ${card.y}px)`;
+                if (isAlreadySelected) {
+                    // Si ya estaba seleccionada, la arrastramos
+                    e.stopPropagation(); // Evita el Paneo del viewport
+                    touchMode = 'drag';
+                    const startTouchX = (e.touches[0].clientX - view.x) / view.s;
+                    const startTouchY = (e.touches[0].clientY - view.y) / view.s;
+                    const startCardX = card.x; const startCardY = card.y;
+
+                    el.classList.add('dragging');
+
+                    function touchMove(ev) {
+                        if(touchMode !== 'drag' || ev.touches.length !== 1) return;
+                        ev.preventDefault(); 
+                        const mx = (ev.touches[0].clientX - view.x) / view.s; const my = (ev.touches[0].clientY - view.y) / view.s;
+                        card.x = startCardX + (mx - startTouchX); card.y = startCardY + (my - startTouchY);
+                        el.style.transform = `translate(${card.x}px, ${card.y}px)`;
+                    }
+                    function touchEnd() { el.classList.remove('dragging'); window.removeEventListener('touchmove', touchMove); window.removeEventListener('touchend', touchEnd); }
+                    window.addEventListener('touchmove', touchMove, {passive: false}); window.addEventListener('touchend', touchEnd);
+                } else {
+                    // Si NO estaba seleccionada, la marcamos como activa, pero iniciamos un PANEO general.
+                    setActiveCard(card.id); clearSelection(); selectedCards.add(card.id); el.classList.add('selected');
+                    
+                    touchMode = 'pan';
+                    startPan = { x: e.touches[0].clientX - view.x, y: e.touches[0].clientY - view.y };
                 }
-                function touchEnd() { el.classList.remove('dragging'); window.removeEventListener('touchmove', touchMove); window.removeEventListener('touchend', touchEnd); }
-                window.addEventListener('touchmove', touchMove, {passive: false}); window.addEventListener('touchend', touchEnd);
             }
         }
 
@@ -603,6 +657,7 @@
                 const famMap = { 'h':0, 'a':1, 'v':2, 'z':3, 'l':4 };
                 deck.forEach(c => { if (c.type === 'char') { c.x = startX + (famMap[c.fam] * W); c.y = startY + (c.val * H); } else { const iCol = 6 + Math.floor((c.val-1)/13); const iRow = ((c.val-1)%13) + 1; c.x = startX + (iCol * W); c.y = startY + (iRow * H); } updatePos(c); });
             } else if (mode === 'score') {
+                if(!devMode) return; // Protección adicional
                 if(!scoresVisible) toggleScoresVisibility(true); 
                 const sortedDeck = [...deck].sort((a, b) => { const scoreA = cardScores[a.id] || -1; const scoreB = cardScores[b.id] || -1; if (scoreA !== scoreB) return scoreB - scoreA; if (a.fam !== b.fam) return a.fam.localeCompare(b.fam); return a.val - b.val; });
                 const COLS = 13; sortedDeck.forEach((c, index) => { const col = index % COLS; const row = Math.floor(index / COLS); c.x = startX + (col * W); c.y = startY + (row * H); updatePos(c); });
